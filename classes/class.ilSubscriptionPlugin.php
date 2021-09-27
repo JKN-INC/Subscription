@@ -1,35 +1,73 @@
 <?php
-require_once('./Services/UIComponent/classes/class.ilUserInterfaceHookPlugin.php');
+require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php');
 
 /**
  * Class ilSubscriptionPlugin
  *
  * @author Fabian Schmid <fs@studer-raimann.ch>
  */
-class ilSubscriptionPlugin extends ilUserInterfaceHookPlugin {
+class ilSubscriptionPlugin extends ilUserInterfaceHookPlugin
+{
 
-	/**
-	 * @var ilSubscriptionPlugin
-	 */
-	protected static $instance;
-
-
-	/**
-	 * @return ilSubscriptionPlugin
-	 */
-	public static function getInstance() {
-		if (!isset(self::$instance)) {
-			self::$instance = new self();
-		}
-
-		return self::$instance;
-	}
+    const PLUGIN_ID = 'subscription';
+    const PLUGIN_NAME = 'Subscription';
+    /**
+     * @var ilSubscriptionPlugin
+     */
+    protected static $instance;
 
 
-	/**
-	 * @return string
-	 */
-	public function getPluginName() {
-		return 'Subscription';
-	}
+    /**
+     * @return ilSubscriptionPlugin
+     */
+    public static function getInstance()
+    {
+        if (!isset(self::$instance)) {
+            self::$instance = new self();
+        }
+
+        return self::$instance;
+    }
+
+
+    /**
+     * @var ilDBInterface
+     */
+    protected $db;
+
+
+    /**
+     *
+     */
+    public function __construct()
+    {
+        parent::__construct();
+
+        global $DIC;
+
+        $this->db = $DIC->database();
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getPluginName()
+    {
+        return self::PLUGIN_NAME;
+    }
+
+
+    /**
+     * @return bool
+     */
+    protected function beforeUninstall()
+    {
+        $this->db->dropTable(msConfig::TABLE_NAME, false);
+        $this->db->dropTable(msInvitation::TABLE_NAME, false);
+        $this->db->dropTable(msSubscription::TABLE_NAME, false);
+        $this->db->dropTable(msToken::TABLE_NAME, false);
+
+        return true;
+    }
 }
