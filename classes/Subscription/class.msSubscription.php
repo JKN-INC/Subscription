@@ -16,13 +16,14 @@ class msSubscription extends ActiveRecord
      * @var array
      */
     protected static $deletable_status
-        = array(
-            msUserStatus::STATUS_USER_NOT_ASSIGNABLE,
-            msUserStatus::STATUS_USER_CAN_BE_INVITED,
-        );
+    = array(
+        msUserStatus::STATUS_USER_NOT_ASSIGNABLE,
+        msUserStatus::STATUS_USER_CAN_BE_INVITED,
+    );
     const TYPE_EMAIL = 1;
     const TYPE_MATRICULATION = 2;
     const DELIMITER = '|';
+    const DELIMITER_COMMA = ',';
     const CONTEXT_CRS = 1;
     const CONTEXT_GRP = 2;
 
@@ -133,7 +134,7 @@ class msSubscription extends ActiveRecord
                 $status = $participants->add($usr_id, $this->getRole());
                 break;
         }
-        if ($status AND msConfig::getValueByKey(msConfig::F_SEND_MAILS_FOR_COURSE_SUBSCRIPTION)) {
+        if ($status and msConfig::getValueByKey(msConfig::F_SEND_MAILS_FOR_COURSE_SUBSCRIPTION)) {
             switch ($this->getContext()) {
                 case self::CONTEXT_CRS:
                     $participants->sendNotification($participants->NOTIFY_ACCEPT_USER, $usr_id);
@@ -156,17 +157,24 @@ class msSubscription extends ActiveRecord
      *
      * @return array
      */
-    public static function seperateEmailString($email, $use_old = false)
+    public static function seperateEmailString($email_string, $use_old = false)
     {
         if ($use_old) {
-            $result = preg_replace("/([;,\\n\\r ])/um", self::DELIMITER, $email);
+            $result = preg_replace("/([;,\\n\\r ])/um", self::DELIMITER, $email_string);
             $result = str_ireplace(self::DELIMITER . self::DELIMITER, self::DELIMITER, $result);
 
             return explode(self::DELIMITER, $result);
         }
-        preg_match_all("/[A-Za-z0-9_.-]+@[A-Za-z0-9_.-]+\\.[A-Za-z0-9_-][A-Za-z0-9_]+/uismx", $email, $matches);
+        $matches = [];
+        $emails = explode(self::DELIMITER_COMMA, $email_string);
 
-        return $matches[0];
+        foreach ($emails as $e) {
+            $email = trim($e);
+            if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $matches[] = $e;
+            }
+        }
+        return $matches;
     }
 
 
@@ -203,7 +211,7 @@ class msSubscription extends ActiveRecord
             'obj_ref_id'      => '=',
             'deleted'         => '=',
         );
-        if (!msSubscription::where($where, $operators)->hasSets() AND $input != '') {
+        if (!msSubscription::where($where, $operators)->hasSets() and $input != '') {
             $msSubscription = new msSubscription();
             $msSubscription->setMatchingString($input);
             $status = new msUserStatus($input, $type, $obj_ref_id);
