@@ -28,6 +28,8 @@ class ilSubscriptionConfigGUI extends ilPluginConfigGUI
      */
     protected $tpl;
 
+    /** @var ilSubscriptionPlugin */
+    protected $pl;
 
     public function __construct()
     {
