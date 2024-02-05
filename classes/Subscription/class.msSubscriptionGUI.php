@@ -227,7 +227,7 @@ class msSubscriptionGUI
                 $context = msSubscription::CONTEXT_CRS;
                 break;
         }
-        foreach (msSubscription::seperateEmailString($_POST[self::EMAIL_FIELD]) as $mail) {
+        foreach (msSubscription::seperateEmailString($_POST[self::EMAIL_FIELD], true) as $mail) {
             msSubscription::insertNewRequests($this->obj_ref_id, $mail, msSubscription::TYPE_EMAIL, $context);
         }
         foreach (msSubscription::seperateMatriculationString($_POST[self::MATRICULATION_FIELD]) as $matriculation) {
