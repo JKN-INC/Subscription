@@ -1,5 +1,7 @@
 <?php
-require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php');
+if (file_exists('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php')) {
+    require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php');
+}
 
 /**
  * Example configuration user interface class
@@ -8,6 +10,7 @@ require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHoo
  * @author  Fabian Schmid <fs@studer-raimann.ch>
  * @version $Id$
  *
+ *  @ilCtrl_IsCalledBy ilSubscriptionConfigGUI: ilObjComponentSettingsGUI
  */
 class ilSubscriptionConfigGUI extends ilPluginConfigGUI
 {
@@ -27,6 +30,10 @@ class ilSubscriptionConfigGUI extends ilPluginConfigGUI
      * @var ilGlobalTemplateInterface
      */
     protected $tpl;
+    /**
+     * @var ilSubscriptionPlugin
+     */
+    protected $pl;
 
     /** @var ilSubscriptionPlugin */
     protected $pl;
@@ -45,7 +52,7 @@ class ilSubscriptionConfigGUI extends ilPluginConfigGUI
     /**
      * @param string $cmd
      */
-    public function performCommand($cmd)
+    public function performCommand(string $cmd): void
     {
         switch ($cmd) {
             case self::CMD_CONFIGURE:

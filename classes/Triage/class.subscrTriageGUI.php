@@ -116,7 +116,7 @@ class subscrTriageGUI
 
     public function determineLogin()
     {
-        if (msConfig::checkShibboleth() AND $this->subscription->getAccountType() == msAccountType::TYPE_SHIBBOLETH) {
+        if (msConfig::checkShibboleth() && $this->subscription->getAccountType() == msAccountType::TYPE_SHIBBOLETH) {
             $this->redirectToLogin();
         } else {
             if (msConfig::getValueByKey('allow_registration')) {

@@ -59,7 +59,7 @@ class ilSubscriptionUIHookGUI extends ilUIHookPluginGUI
      * @param string $a_part
      * @param array  $a_par
      */
-    public function modifyGUI($a_comp, $a_part, $a_par = array())
+    public function modifyGUI(string $a_comp, string $a_part, array $a_par = array()): void
     {
         global $DIC;
 
@@ -102,7 +102,7 @@ class ilSubscriptionUIHookGUI extends ilUIHookPluginGUI
             $tabs->removeSubTab(self::TAB_SRSUBSCRIPTION);
             $tabs->activateTab(self::TAB_MEMBERS);
             $this->ctrl->setTargetScript('ilias.php');
-            $this->ctrl->setParameterByClass(msSubscriptionGUI::class, 'obj_ref_id', $_GET[self::REF_ID]);
+            $this->ctrl->setParameterByClass(msSubscriptionGUI::class, 'obj_ref_id', isset($_GET[self::REF_ID]) ? $_GET[self::REF_ID] : '');
 
             $tabs->addSubTab(
                 self::TAB_SRSUBSCRIPTION, $pl_obj->txt('tab_usage_' . msConfig::getUsageType()), $this->ctrl->getLinkTargetByClass(
@@ -152,7 +152,7 @@ class ilSubscriptionUIHookGUI extends ilUIHookPluginGUI
             return false;
         }
 
-        $ref_id = $_GET[self::REF_ID];
+        $ref_id = isset($_GET[self::REF_ID]) ? $_GET[self::REF_ID] : 0;
         if (!$this->access->checkAccess('write', '', $ref_id)) {
             return false;
         }
@@ -173,8 +173,12 @@ class ilSubscriptionUIHookGUI extends ilUIHookPluginGUI
     }
 
 
-    public function gotoHook()
+    public function gotoHook(): void
     {
+        if (!isset($_GET['target'])) {
+            return;
+        }
+        
         if (preg_match("/tokenreg_([0-9a-zA-Z]*)/uim", $_GET['target'], $matches)) {
             $token = $matches[1];
             $this->initBaseClass();

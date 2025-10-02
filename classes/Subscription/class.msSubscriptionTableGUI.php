@@ -39,7 +39,7 @@ class msSubscriptionTableGUI extends msModelObjectTableGUI
     protected function initTableData()
     {
         $where = array(
-            'obj_ref_id' => $_GET['obj_ref_id'],
+            'obj_ref_id' => isset($_GET['obj_ref_id']) ? $_GET['obj_ref_id'] : 0,
             'deleted'    => false,
         );
         $data = array();
@@ -72,7 +72,7 @@ class msSubscriptionTableGUI extends msModelObjectTableGUI
     {
         $this->addColumn($this->pl->txt('main_tblh_subscribe'));
 
-        if ($this->getMailUsage() AND msConfig::getValueByKey(msConfig::F_ENABLE_SENDING_INVITATIONS)) {
+        if ($this->getMailUsage() && msConfig::getValueByKey(msConfig::F_ENABLE_SENDING_INVITATIONS)) {
             $this->addColumn($this->pl->txt('main_tblh_invite'));
         }
         if ($this->getMailUsage()) {
@@ -106,7 +106,7 @@ class msSubscriptionTableGUI extends msModelObjectTableGUI
     {
         $this->addCommandButton(msSubscriptionGUI::CMD_REMOVE_UNREGISTERED, $this->pl->txt('main_send_table_remove_unregistered'));
         $this->addCommandButton(msSubscriptionGUI::CMD_CLEAR, $this->pl->txt('main_send_table_clear'));
-        if (msConfig::getValueByKey(msConfig::F_USE_EMAIL_FOR_USERS) AND msConfig::getValueByKey(msConfig::F_ENABLE_SENDING_INVITATIONS)) {
+        if (msConfig::getValueByKey(msConfig::F_USE_EMAIL_FOR_USERS) && msConfig::getValueByKey(msConfig::F_ENABLE_SENDING_INVITATIONS)) {
             $this->addCommandButton(msSubscriptionGUI::CMD_TRIAGE, $this->pl->txt('main_send_table_usage_2'));
         } else {
             $this->addCommandButton(msSubscriptionGUI::CMD_TRIAGE, $this->pl->txt('main_send_table_usage_1'));
@@ -208,7 +208,7 @@ class msSubscriptionTableGUI extends msModelObjectTableGUI
         }
         $this->tpl->setVariable('USR_ID', 'obj_' . $msSubscription->getId());
         $this->tpl->setVariable('STD_ROLE', msUserStatus::ROLE_MEMBER);
-        if (!$this->getMailUsage() OR !msConfig::getValueByKey(msConfig::F_ENABLE_SENDING_INVITATIONS)) {
+        if (!$this->getMailUsage() || !msConfig::getValueByKey(msConfig::F_ENABLE_SENDING_INVITATIONS)) {
             $this->tpl->setVariable('DISABLE_NOMAIL', 'nomail');
         }
         $this->tpl->setVariable('CMD_INVITE', msSubscriptionGUI::CMD_INVITE);

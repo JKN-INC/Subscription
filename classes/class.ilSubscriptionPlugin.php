@@ -1,5 +1,7 @@
 <?php
-require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php');
+if (file_exists('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php')) {
+    require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php');
+}
 
 /**
  * Class ilSubscriptionPlugin
@@ -11,10 +13,24 @@ class ilSubscriptionPlugin extends ilUserInterfaceHookPlugin
 
     const PLUGIN_ID = 'subscription';
     const PLUGIN_NAME = 'Subscription';
+    
+    protected $DIC;
     /**
      * @var ilSubscriptionPlugin
      */
     protected static $instance;
+    /**
+     * @var ilDBInterface
+     */
+    protected ilDBInterface $db;
+    /**
+     * @var ilRbacReview
+     */
+    protected $rbacreview;
+    /**
+     * @var ilComponentRepositoryWrite
+     */
+    protected ilComponentRepositoryWrite $component_repository;
 
 
     /**
@@ -31,28 +47,25 @@ class ilSubscriptionPlugin extends ilUserInterfaceHookPlugin
 
 
     /**
-     * @var ilDBInterface
-     */
-    protected $db;
-
-
-    /**
      *
      */
     public function __construct()
     {
-        parent::__construct();
-
         global $DIC;
-
+        
+        $this->DIC = $DIC;
         $this->db = $DIC->database();
+        $this->rbacreview = $DIC['rbacreview'];
+        $this->component_repository = $DIC["component.repository"];
+
+        parent::__construct($this->db, $this->component_repository, ilSubscriptionPlugin::PLUGIN_ID);
     }
 
 
     /**
      * @return string
      */
-    public function getPluginName()
+    public function getPluginName(): string
     {
         return self::PLUGIN_NAME;
     }
@@ -61,7 +74,7 @@ class ilSubscriptionPlugin extends ilUserInterfaceHookPlugin
     /**
      * @return bool
      */
-    protected function beforeUninstall()
+    protected function beforeUninstall(): bool
     {
         $this->db->dropTable(msConfig::TABLE_NAME, false);
         $this->db->dropTable(msInvitation::TABLE_NAME, false);

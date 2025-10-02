@@ -35,7 +35,7 @@ class msConfig extends ActiveRecord
     /**
      * @return string
      */
-    public function getConnectorContainerName()
+    public function getConnectorContainerName(): string
     {
         return self::TABLE_NAME;
     }
@@ -45,7 +45,7 @@ class msConfig extends ActiveRecord
      * @return string
      * @deprecated
      */
-    public static function returnDbTableName()
+    public static function returnDbTableName(): string
     {
         return self::TABLE_NAME;
     }
@@ -54,7 +54,7 @@ class msConfig extends ActiveRecord
     /**
      * @var bool
      */
-    protected $ar_safe_read = false;
+    protected bool $ar_safe_read = false;
     /**
      * @var array
      */
@@ -87,9 +87,15 @@ class msConfig extends ActiveRecord
      */
     public static function getValueByKey($key)
     {
-        $obj = self::findOrGetInstance($key);
-
-        return $obj->getConfigValue();
+        try {
+            $obj = self::findOrGetInstance($key);
+            $value = $obj->getConfigValue();
+            
+            // Return empty string instead of null to prevent undefined array key errors
+            return $value !== null ? $value : '';
+        } catch (Exception $e) {
+            return '';
+        }
     }
 
 
@@ -114,7 +120,7 @@ class msConfig extends ActiveRecord
      */
     public static function checkShibboleth()
     {
-        return self::getValueByKey(self::F_SHIBBOLETH) AND is_readable(self::getValueByKey(self::F_METADATA_XML));
+        return self::getValueByKey(self::F_SHIBBOLETH) && is_readable(self::getValueByKey(self::F_METADATA_XML));
     }
 
 
@@ -140,7 +146,7 @@ class msConfig extends ActiveRecord
         if (self::getValueByKey(self::F_USE_MATRICULATION)) {
             $usage_type = self::TYPE_USAGE_MATRICULATION;
         }
-        if (self::getValueByKey(self::F_USE_MATRICULATION) AND self::getValueByKey(self::F_USE_EMAIL_FOR_USERS)) {
+        if (self::getValueByKey(self::F_USE_MATRICULATION) && self::getValueByKey(self::F_USE_EMAIL_FOR_USERS)) {
             $usage_type = self::TYPE_USAGE_BOTH;
         }
 
@@ -165,7 +171,7 @@ class msConfig extends ActiveRecord
         global $DIC;
 
         $subtrees = explode(',', self::getValueByKey(self::F_IGNORE_SUBTREE));
-        if (!is_array($subtrees) OR count($subtrees) == 0) {
+        if (!is_array($subtrees) || count($subtrees) == 0) {
             self::$ignore_chache[$check_ref_id] = false;
 
             return false;

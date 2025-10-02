@@ -45,7 +45,7 @@ class msAccountType
      */
     public function initAccountType()
     {
-        if ($this->getSubscriptionType() == msSubscription::TYPE_EMAIL AND msConfig::getValueByKey('shibboleth')) {
+        if ($this->getSubscriptionType() == msSubscription::TYPE_EMAIL && msConfig::getValueByKey('shibboleth')) {
             self::readDomains();
             foreach (self::$domains as $aai) {
                 // (bool)preg_match("/(\\@".$aai.")|(\\@[a-zA-Z0-9]*\\.".$aai.")/uism", $this->getMatchingString()) // Possible Fix fo

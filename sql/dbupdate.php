@@ -99,8 +99,30 @@ if (!$ilDB->tableExists(msInvitation::TABLE_NAME)) {
 require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
 
 msConfig::updateDB();
-msConfig::set('use_email', true);
-msConfig::set('system_user', 6);
+
+// Initialize all required configuration values with safe defaults
+$config_defaults = array(
+    msConfig::F_USE_EMAIL_FOR_USERS => true,
+    msConfig::F_USE_MATRICULATION => false,
+    msConfig::F_ENABLE_SENDING_INVITATIONS => true,
+    msConfig::F_ALLOW_REGISTRATION => true,
+    msConfig::F_ASK_FOR_LOGIN => false,
+    msConfig::F_FIXED_EMAIL => false,
+    msConfig::F_SHIBBOLETH => false,
+    msConfig::F_METADATA_XML => '',
+    msConfig::F_SHOW_NAMES => true,
+    msConfig::F_SYSTEM_USER => 6,
+    msConfig::F_SEND_MAILS_FOR_COURSE_SUBSCRIPTION => false,
+    msConfig::F_PURGE => false,
+    msConfig::F_ACTIVATE_GROUPS => false,
+    msConfig::F_ACTIVATE_COURSES => true,
+    msConfig::F_IGNORE_SUBTREE => '',
+    msConfig::F_IGNORE_SUBTREE_ACTIVE => false,
+);
+
+foreach ($config_defaults as $key => $default_value) {
+    msConfig::set($key, $default_value);
+}
 
 msSubscription::updateDB();
 if ($ilDB->tableExists(msToken::TABLE_NAME)) {
@@ -135,27 +157,47 @@ if ($ilDB->tableExists(msToken::TABLE_NAME)) {
 <#9>
 <?php
 require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
-msSubscription::renameDBField('email', 'matching_string');
-msSubscription::removeDBField('matriculation');
+
+// Safely rename email field to matching_string if needed
+global $DIC;
+$ilDB = $DIC->database();
+if ($ilDB->tableColumnExists(msSubscription::TABLE_NAME, 'email') && 
+    !$ilDB->tableColumnExists(msSubscription::TABLE_NAME, 'matching_string')) {
+    msSubscription::renameDBField('email', 'matching_string');
+}
+
+// Only try to remove matriculation field if it exists
+if ($ilDB->tableColumnExists(msSubscription::TABLE_NAME, 'matriculation')) {
+    msSubscription::removeDBField('matriculation');
+}
+
 msSubscription::updateDB();
 ?>
 <#10>
 <?php
 require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
-msConfig::set(msConfig::F_ENABLE_SENDING_INVITATIONS, true);
+// Configuration is now handled comprehensively in step #6
 ?>
 <#11>
 <?php
 require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
-msConfig::set(msConfig::F_SEND_MAILS_FOR_COURSE_SUBSCRIPTION, false);
+// Configuration is now handled comprehensively in step #6
 ?>
 <#12>
 <?php
 require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
-msSubscription::renameDBField('crs_ref_id', 'obj_ref_id');
+
+// Safely rename crs_ref_id field to obj_ref_id if needed
+global $DIC;
+$ilDB = $DIC->database();
+if ($ilDB->tableColumnExists(msSubscription::TABLE_NAME, 'crs_ref_id') && 
+    !$ilDB->tableColumnExists(msSubscription::TABLE_NAME, 'obj_ref_id')) {
+    msSubscription::renameDBField('crs_ref_id', 'obj_ref_id');
+}
+
 msSubscription::updateDB();
 
-msConfig::set(msConfig::F_ACTIVATE_GROUPS, false);
+// Configuration is now handled comprehensively in step #6
 ?>
 <#13>
 <?php
@@ -167,8 +209,7 @@ $DIC->database()->manipulate('UPDATE ' . msSubscription::TABLE_NAME . ' SET cont
 <#14>
 <?php
 require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
-msConfig::set(msConfig::F_ACTIVATE_COURSES, true);
-msConfig::set(msConfig::F_ACTIVATE_GROUPS, false);
+// Configuration is now handled comprehensively in step #6
 ?>
 <#15>
 <?php

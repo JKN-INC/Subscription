@@ -31,7 +31,7 @@ class msSubscription extends ActiveRecord
     /**
      * @return string
      */
-    public function getConnectorContainerName()
+    public function getConnectorContainerName(): string
     {
         return self::TABLE_NAME;
     }
@@ -41,7 +41,7 @@ class msSubscription extends ActiveRecord
      * @return string
      * @deprecated
      */
-    public static function returnDbTableName()
+    public static function returnDbTableName(): string
     {
         return self::TABLE_NAME;
     }
@@ -57,7 +57,7 @@ class msSubscription extends ActiveRecord
     public $account_type_object;
 
 
-    public function afterObjectLoad()
+    public function afterObjectLoad(): void
     {
         $this->user_status_object = new msUserStatus($this->getMatchingString(), $this->getSubscriptionType(), $this->getObjRefId());
         $this->account_type_object = new msAccountType($this->getMatchingString(), $this->getSubscriptionType());
@@ -67,7 +67,7 @@ class msSubscription extends ActiveRecord
     /**
      * @var bool
      */
-    protected $ar_safe_read = false;
+    protected bool $ar_safe_read = false;
 
 
     /**
@@ -134,7 +134,7 @@ class msSubscription extends ActiveRecord
                 $status = $participants->add($usr_id, $this->getRole());
                 break;
         }
-        if ($status and msConfig::getValueByKey(msConfig::F_SEND_MAILS_FOR_COURSE_SUBSCRIPTION)) {
+        if ($status && msConfig::getValueByKey(msConfig::F_SEND_MAILS_FOR_COURSE_SUBSCRIPTION)) {
             switch ($this->getContext()) {
                 case self::CONTEXT_CRS:
                     $participants->sendNotification($participants->NOTIFY_ACCEPT_USER, $usr_id);
@@ -211,7 +211,7 @@ class msSubscription extends ActiveRecord
             'obj_ref_id'      => '=',
             'deleted'         => '=',
         );
-        if (!msSubscription::where($where, $operators)->hasSets() and $input != '') {
+        if (!msSubscription::where($where, $operators)->hasSets() && $input != '') {
             $msSubscription = new msSubscription();
             $msSubscription->setMatchingString($input);
             $status = new msUserStatus($input, $type, $obj_ref_id);
@@ -239,7 +239,7 @@ class msSubscription extends ActiveRecord
     }
 
 
-    public function create()
+    public function create(): void
     {
         $this->setToken(self::generateToken());
         parent::create();

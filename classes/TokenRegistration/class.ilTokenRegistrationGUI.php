@@ -13,6 +13,14 @@ class ilTokenRegistrationGUI extends ilAccountRegistrationGUI
      * @var msSubscription
      */
     protected $subscription;
+    /**
+     * @var ilSubscriptionPlugin
+     */
+    protected $pl;
+    /**
+     * @var string
+     */
+    protected $token;
 
     public function __construct()
     {
@@ -22,13 +30,13 @@ class ilTokenRegistrationGUI extends ilAccountRegistrationGUI
         parent::__construct();
         $this->pl = ilSubscriptionPlugin::getInstance();
         $this->ctrl = $DIC->ctrl();
-        $this->token = $_GET['token'];
+        $this->token = isset($_GET['token']) ? $_GET['token'] : '';
         $this->subscription = msSubscription::where(array('token' => $this->token))->first();
         $this->ctrl->saveParameter($this, 'token');
     }
 
 
-    public function executeCommand()
+    public function executeCommand(): void
     {
         $cmd = $this->ctrl->getCmd();
         switch ($cmd) {
@@ -62,9 +70,11 @@ class ilTokenRegistrationGUI extends ilAccountRegistrationGUI
      */
     protected function __initForm($a_force_code = false)
     {
-        if ($this->subscription->getDeleted()) {
+        // Safety check for subscription during initialization
+        if (!$this->subscription || $this->subscription->getDeleted()) {
             throw new ilException('this token is no longer valid');
         }
+        
         parent::__initForm();
         /**
          * @var ilPropertyFormGUI $form
@@ -79,50 +89,59 @@ class ilTokenRegistrationGUI extends ilAccountRegistrationGUI
         );
 
         $username = $this->form->getItemByPostVar('username');
-        $username->setValue($this->subscription->getMatchingString());
+        if ($username) {
+            $username->setValue($this->subscription->getMatchingString());
+        }
 
         $usr_email = $this->form->getItemByPostVar('usr_email');
         $matriculation = $this->form->getItemByPostVar('usr_matriculation');
 
         switch ($this->subscription->getSubscriptionType()) {
             case msSubscription::TYPE_EMAIL:
-                $usr_email->setDisabled(msConfig::getValueByKey('fixed_email'));
-                $usr_email->setValue($this->subscription->getMatchingString());
-                $retype = in_array('setRetypeValue', get_class_methods(get_class($usr_email)));
-                if ($retype) {
-                    $usr_email->setRetypeValue($this->subscription->getMatchingString());
-                }
-                if (msConfig::getValueByKey('fixed_email')) {
-                    //					$usr_email->setPostVar('usr_email_fixed');
-                    $hidden = new ilHiddenInputGUI('usr_email');
-                    $hidden->setValue($this->subscription->getMatchingString());
-                    $this->form->addItem($hidden);
+                if ($usr_email) {
+                    $usr_email->setDisabled(msConfig::getValueByKey('fixed_email'));
+                    $usr_email->setValue($this->subscription->getMatchingString());
+                    $retype = in_array('setRetypeValue', get_class_methods(get_class($usr_email)));
                     if ($retype) {
-                        $hidden_retype = new ilHiddenInputGUI('usr_email_retype');
-                        $hidden_retype->setValue($this->subscription->getMatchingString());
-                        $this->form->addItem($hidden_retype);
+                        $usr_email->setRetypeValue($this->subscription->getMatchingString());
+                    }
+                    if (msConfig::getValueByKey('fixed_email')) {
+                        //					$usr_email->setPostVar('usr_email_fixed');
+                        $hidden = new ilHiddenInputGUI('usr_email');
+                        $hidden->setValue($this->subscription->getMatchingString());
+                        $this->form->addItem($hidden);
+                        if ($retype) {
+                            $hidden_retype = new ilHiddenInputGUI('usr_email_retype');
+                            $hidden_retype->setValue($this->subscription->getMatchingString());
+                            $this->form->addItem($hidden_retype);
+                        }
                     }
                 }
                 break;
             case msSubscription::TYPE_MATRICULATION:
-                $matriculation->setDisabled(msConfig::getValueByKey('fixed_email'));
-                $matriculation->setValue($this->subscription->getMatchingString());
+                if ($matriculation) {
+                    $matriculation->setDisabled(msConfig::getValueByKey('fixed_email'));
+                    $matriculation->setValue($this->subscription->getMatchingString());
+                }
         }
     }
 
 
-    public function displayForm()
+    public function displayForm(): ilGlobalTemplateInterface
     {
-        if (!$this->subscription OR $this->subscription->getDeleted() == 1) {
+        if (!$this->subscription || $this->subscription->getDeleted() == 1) {
             $this->tpl->setContent($this->pl->txt('main_not_invalid_token'));
+            return $this->tpl;
         } elseif ($this->subscription->getUserStatus() == msUserStatus::STATUS_USER_CAN_BE_ASSIGNED OR $this->subscription->getUserStatus()
             == msUserStatus::STATUS_ALREADY_ASSIGNED
         ) {
             $this->assignUser();
             $this->redirectToCourse();
+            return $this->tpl;
         } else {
             $form_template = parent::displayForm();
             $this->tpl->setContent($form_template->get());
+            return $this->tpl;
         }
     }
 
@@ -154,27 +173,36 @@ class ilTokenRegistrationGUI extends ilAccountRegistrationGUI
     }
 
 
-    public function saveForm()
+    public function saveForm(): ilGlobalTemplateInterface
     {
+        // Safety check - ensure we have subscription data
+        if (!$this->subscription) {
+            throw new ilException('No valid subscription found!');
+        }
+        
         $matchingString = $this->subscription->getMatchingString();
         switch ($this->subscription->getSubscriptionType()) {
             case msSubscription::TYPE_EMAIL:
-                if ($_POST['usr_email'] != $matchingString
-                    || $_POST['usr_email_retype'] != $matchingString
+                if (!isset($_POST['usr_email']) || !isset($_POST['usr_email_retype']) ||
+                    $_POST['usr_email'] != $matchingString ||
+                    $_POST['usr_email_retype'] != $matchingString
                 ) {
                     throw new ilException('no valid email!');
                 }
                 break;
             case msSubscription::TYPE_MATRICULATION:
-                if ($_POST['matriculation'] != $matchingString) {
-                    throw new ilException('no valid email!');
+                if (!isset($_POST['usr_matriculation']) || $_POST['usr_matriculation'] != $matchingString) {
+                    throw new ilException('no valid matriculation!');
                 }
+                break;
         }
 
         if (parent::saveForm()) {
             $this->assignUser();
             $this->redirectToCourse();
         }
+        
+        return $this->tpl;
     }
 
 
@@ -183,9 +211,11 @@ class ilTokenRegistrationGUI extends ilAccountRegistrationGUI
      */
     public function loginDeprecated($password)
     {
-        $_POST['username'] = $this->userObj->getLogin();
-        $_POST['password'] = $password;
-        ilInitialisation::initILIAS();
+        if (isset($this->userObj)) {
+            $_POST['username'] = $this->userObj->getLogin();
+            $_POST['password'] = $password;
+            ilInitialisation::initILIAS();
+        }
     }
 
 

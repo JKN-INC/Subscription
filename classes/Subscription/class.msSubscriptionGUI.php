@@ -83,7 +83,7 @@ class msSubscriptionGUI
         $this->pl = ilSubscriptionPlugin::getInstance();
         //		$this->pl->updateLanguageFiles();
 
-        $this->obj_ref_id = $_GET['obj_ref_id'];
+        $this->obj_ref_id = isset($_GET['obj_ref_id']) ? $_GET['obj_ref_id'] : 0;
         $this->obj = ilObjectFactory::getInstanceByRefId($this->obj_ref_id);
         $class_name = $this->obj_def->getClassName($this->obj->getType());
         $this->ctrl->setParameterByClass('ilObj' . $class_name . 'GUI', 'ref_id', $this->obj_ref_id);
@@ -227,10 +227,10 @@ class msSubscriptionGUI
                 $context = msSubscription::CONTEXT_CRS;
                 break;
         }
-        foreach (msSubscription::seperateEmailString($_POST[self::EMAIL_FIELD], true) as $mail) {
+        foreach (msSubscription::seperateEmailString(isset($_POST[self::EMAIL_FIELD]) ? $_POST[self::EMAIL_FIELD] : '') as $mail) {
             msSubscription::insertNewRequests($this->obj_ref_id, $mail, msSubscription::TYPE_EMAIL, $context);
         }
-        foreach (msSubscription::seperateMatriculationString($_POST[self::MATRICULATION_FIELD]) as $matriculation) {
+        foreach (msSubscription::seperateMatriculationString(isset($_POST[self::MATRICULATION_FIELD]) ? $_POST[self::MATRICULATION_FIELD] : '') as $matriculation) {
             msSubscription::insertNewRequests($this->obj_ref_id, $matriculation, msSubscription::TYPE_MATRICULATION, $context);
         }
         $this->ctrl->redirect($this, self::CMD_LIST_OBJECTS);
@@ -339,7 +339,7 @@ class msSubscriptionGUI
     protected function removeUnregistered()
     {
         $where = array(
-            'obj_ref_id' => $_GET['obj_ref_id'],
+            'obj_ref_id' => isset($_GET['obj_ref_id']) ? $_GET['obj_ref_id'] : 0,
             'deleted'    => false,
         );
         /**
@@ -365,7 +365,7 @@ class msSubscriptionGUI
     protected function clear()
     {
         $where = array(
-            'obj_ref_id' => $_GET['obj_ref_id'],
+            'obj_ref_id' => isset($_GET['obj_ref_id']) ? $_GET['obj_ref_id'] : 0,
             'deleted'    => false,
         );
 

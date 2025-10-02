@@ -2,7 +2,13 @@ Subscription
 ============
 This UIHook-Plugin allows you to subscribe multiple users to a course at once, by writing the names into a list. You can also type in e-mail addresses, to which the plugin will send an invitation and a formular to create an ilias account. 
 
+**ILIAS 8 Compatibility**: This plugin has been updated for ILIAS 8 compatibility. Requires PHP 8.0+.
+
 Have a look at the [full documentation](/doc/Documentation.pdf?raw=true)
+
+## Requirements
+- ILIAS 8.0 or higher
+- PHP 8.0 or higher
 
 ## Installation 
 Start at your ILIAS root directory
