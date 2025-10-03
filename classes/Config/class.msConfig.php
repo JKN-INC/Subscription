@@ -87,15 +87,9 @@ class msConfig extends ActiveRecord
      */
     public static function getValueByKey($key)
     {
-        try {
-            $obj = self::findOrGetInstance($key);
-            $value = $obj->getConfigValue();
-            
-            // Return empty string instead of null to prevent undefined array key errors
-            return $value !== null ? $value : '';
-        } catch (Exception $e) {
-            return '';
-        }
+        $obj = self::findOrGetInstance($key);
+
+        return $obj->getConfigValue();
     }
 
 

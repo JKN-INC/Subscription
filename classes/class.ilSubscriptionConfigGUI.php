@@ -1,7 +1,4 @@
 <?php
-if (file_exists('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php')) {
-    require_once('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php');
-}
 
 /**
  * Example configuration user interface class
@@ -33,9 +30,6 @@ class ilSubscriptionConfigGUI extends ilPluginConfigGUI
     /**
      * @var ilSubscriptionPlugin
      */
-    protected $pl;
-
-    /** @var ilSubscriptionPlugin */
     protected $pl;
 
     public function __construct()

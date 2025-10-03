@@ -1,6 +1,5 @@
 <#1>
 <?php
-require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
 /**
  * @var ilDBInterface $ilDB
  */
@@ -43,7 +42,7 @@ if (!$ilDB->tableExists(msToken::TABLE_NAME)) {
 ?>
 <#2>
 <?php
-require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
+//require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
 $ilDB->addTableColumn(msToken::TABLE_NAME, "local_role",
     array (
         'type' => 'integer',
@@ -54,7 +53,7 @@ $ilDB->addTableColumn(msToken::TABLE_NAME, "local_role",
 ?>
 <#3>
 <?php
-require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
+//require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
 $fields = array(
 	'id' => array(
 		'type' => 'integer',
@@ -96,7 +95,7 @@ if (!$ilDB->tableExists(msInvitation::TABLE_NAME)) {
 ?>
 <#6>
 <?php
-require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
+//require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
 
 msConfig::updateDB();
 
@@ -145,18 +144,18 @@ if ($ilDB->tableExists(msToken::TABLE_NAME)) {
 ?>
 <#7>
 <?php
-//require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
+////require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
 //$ilDB->dropTable(xUnibasSubsType::TABLE_NAME, false);
 ?>
 <#8>
 <?php
-//require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
+////require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
 //$pl = ilSubscriptionPlugin::getInstance();
 //$pl->updateLanguageFiles();
 ?>
 <#9>
 <?php
-require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
+//require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
 
 // Safely rename email field to matching_string if needed
 global $DIC;
@@ -175,17 +174,17 @@ msSubscription::updateDB();
 ?>
 <#10>
 <?php
-require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
+//require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
 // Configuration is now handled comprehensively in step #6
 ?>
 <#11>
 <?php
-require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
+//require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
 // Configuration is now handled comprehensively in step #6
 ?>
 <#12>
 <?php
-require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
+//require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
 
 // Safely rename crs_ref_id field to obj_ref_id if needed
 global $DIC;
@@ -201,19 +200,19 @@ msSubscription::updateDB();
 ?>
 <#13>
 <?php
-require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
+//require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
 global $DIC;
 msSubscription::updateDB();
 $DIC->database()->manipulate('UPDATE ' . msSubscription::TABLE_NAME . ' SET context = ' . $ilDB->quote(msSubscription::CONTEXT_CRS, ilDBConstants::T_INTEGER));
 ?>
 <#14>
 <?php
-require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
+//require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
 // Configuration is now handled comprehensively in step #6
 ?>
 <#15>
 <?php
-require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
+//require_once 'Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/Subscription/vendor/autoload.php';
 if (! $ilDB->tableColumnExists(msSubscription::TABLE_NAME, 'matching_string')) {
 	$ilDB->modifyTableColumn(msSubscription::TABLE_NAME, 'matching_string', array(
 		"length" => 1024,
