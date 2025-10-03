@@ -31,7 +31,7 @@ class msSubscription extends ActiveRecord
     /**
      * @return string
      */
-    public function getConnectorContainerName()
+    public function getConnectorContainerName(): string
     {
         return self::TABLE_NAME;
     }
@@ -41,7 +41,7 @@ class msSubscription extends ActiveRecord
      * @return string
      * @deprecated
      */
-    public static function returnDbTableName()
+    public static function returnDbTableName(): string
     {
         return self::TABLE_NAME;
     }
@@ -57,7 +57,7 @@ class msSubscription extends ActiveRecord
     public $account_type_object;
 
 
-    public function afterObjectLoad()
+    public function afterObjectLoad(): void
     {
         $this->user_status_object = new msUserStatus($this->getMatchingString(), $this->getSubscriptionType(), $this->getObjRefId());
         $this->account_type_object = new msAccountType($this->getMatchingString(), $this->getSubscriptionType());
@@ -67,7 +67,7 @@ class msSubscription extends ActiveRecord
     /**
      * @var bool
      */
-    protected $ar_safe_read = false;
+    protected bool $ar_safe_read = false;
 
 
     /**
@@ -104,7 +104,11 @@ class msSubscription extends ActiveRecord
      */
     public function lookupName()
     {
-        if ($this->user_status_object->getUsrId()) {
+        if (!$this->user_status_object) {
+            $this->afterObjectLoad();
+        }
+        
+        if ($this->user_status_object && $this->user_status_object->getUsrId()) {
             $lookupName = ilObjUser::_lookupName($this->user_status_object->getUsrId());
 
             return $lookupName['lastname'] . ', ' . $lookupName['firstname'];
@@ -119,8 +123,18 @@ class msSubscription extends ActiveRecord
         /**
          * @var ilCourseParticipants $participants
          */
+        // Ensure user_status_object is initialized
+        if (!$this->user_status_object) {
+            $this->afterObjectLoad();
+        }
+        
         $obj_id = ilObject::_lookupObjId($this->getObjRefId());
-        $usr_id = $this->user_status_object->getUsrId();
+        $usr_id = $this->user_status_object ? $this->user_status_object->getUsrId() : null;
+        
+        if (!$usr_id) {
+            return false; // Cannot assign without a valid user ID
+        }
+        
         $status = false;
         switch ($this->getContext()) {
             case self::CONTEXT_CRS:
@@ -134,7 +148,7 @@ class msSubscription extends ActiveRecord
                 $status = $participants->add($usr_id, $this->getRole());
                 break;
         }
-        if ($status and msConfig::getValueByKey(msConfig::F_SEND_MAILS_FOR_COURSE_SUBSCRIPTION)) {
+        if ($status && msConfig::getValueByKey(msConfig::F_SEND_MAILS_FOR_COURSE_SUBSCRIPTION)) {
             switch ($this->getContext()) {
                 case self::CONTEXT_CRS:
                     $participants->sendNotification($participants->NOTIFY_ACCEPT_USER, $usr_id);
@@ -211,7 +225,7 @@ class msSubscription extends ActiveRecord
             'obj_ref_id'      => '=',
             'deleted'         => '=',
         );
-        if (!msSubscription::where($where, $operators)->hasSets() and $input != '') {
+        if (!msSubscription::where($where, $operators)->hasSets() && $input != '') {
             $msSubscription = new msSubscription();
             $msSubscription->setMatchingString($input);
             $status = new msUserStatus($input, $type, $obj_ref_id);
@@ -230,16 +244,16 @@ class msSubscription extends ActiveRecord
      */
     public static function generateToken()
     {
-        $token = sha1(microtime() * rand(1, 10000));
+        $token = sha1(microtime(true) * rand(1, 10000));
         while (self::where(array('token' => $token))->hasSets()) {
-            $token = sha1(microtime() * rand(1, 10000));
+            $token = sha1(microtime(true) * rand(1, 10000));
         }
 
         return $token;
     }
 
 
-    public function create()
+    public function create(): void
     {
         $this->setToken(self::generateToken());
         parent::create();
@@ -446,7 +460,12 @@ class msSubscription extends ActiveRecord
      */
     public function getUserStatus()
     {
-        return $this->user_status_object->getStatus();
+        // Ensure user_status_object is initialized
+        if (!$this->user_status_object) {
+            $this->afterObjectLoad();
+        }
+        
+        return $this->user_status_object ? $this->user_status_object->getStatus() : 0;
     }
 
 

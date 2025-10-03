@@ -30,6 +30,10 @@ class subscrTriageGUI
      * @var ilCtrl
      */
     protected $ctrl;
+    /**
+     * @var \ilGlobalTemplateInterface
+     */
+    protected $tpl;
 
 
     public function __construct()
@@ -82,7 +86,7 @@ class subscrTriageGUI
     {
         if (msConfig::getValueByKey('ask_for_login')) {
             if ($this->subscription->getAccountType() == msAccountType::TYPE_SHIBBOLETH) {
-                ilUtil::sendInfo('Ihre E-Mailadresse wurde als SwitchAAI-Adresse erkannt. Sie können sich direkt einloggen. Klicken Sie auf Login und wählen Sie Ihre Home-Organisation aus.'); // TODO: Translate
+                $this->tpl->setOnScreenMessage('info', 'Ihre E-Mailadresse wurde als SwitchAAI-Adresse erkannt. Sie können sich direkt einloggen. Klicken Sie auf Login und wählen Sie Ihre Home-Organisation aus.'); // TODO: Translate
                 $this->tpl->setContent('<a href="' . $this->getLoginLonk() . '" class="submit">Login</a>');
             } else {
                 $this->showLoginDecision();
@@ -116,7 +120,7 @@ class subscrTriageGUI
 
     public function determineLogin()
     {
-        if (msConfig::checkShibboleth() AND $this->subscription->getAccountType() == msAccountType::TYPE_SHIBBOLETH) {
+        if (msConfig::checkShibboleth() && $this->subscription->getAccountType() == msAccountType::TYPE_SHIBBOLETH) {
             $this->redirectToLogin();
         } else {
             if (msConfig::getValueByKey('allow_registration')) {
@@ -135,7 +139,8 @@ class subscrTriageGUI
         $this->setSubscriptionToDeleted();
         $link = $this->getLoginLonk();
 
-        ilUtil::redirect($link);
+        header('Location: ' . $link);
+        exit;
     }
 
 

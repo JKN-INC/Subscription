@@ -44,7 +44,7 @@ abstract class msModelObjectTableGUI extends ilTable2GUI
     /**
      * @var ilCtrl
      */
-    protected $ctrl;
+    protected ilCtrl $ctrl;
     /**
      * @var ilSubscriptionPlugin
      */
@@ -187,7 +187,7 @@ abstract class msModelObjectTableGUI extends ilTable2GUI
      * @internal    param array $_set
      * @description override, when using own columns
      */
-    final function fillRow($a_set)
+    final function fillRow(array $a_set): void
     {
         if ($this->fillTableRow($a_set) === false) {
             self::$num++;

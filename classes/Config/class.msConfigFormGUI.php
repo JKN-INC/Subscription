@@ -22,7 +22,11 @@ class msConfigFormGUI extends ilPropertyFormGUI
     /**
      * @var ilCtrl
      */
-    protected $ctrl;
+    protected ilCtrl $ctrl;
+    /**
+     * @var ilGlobalPageTemplate|ilTemplate
+     */
+    protected $main_tpl;
 
 
     /**
@@ -33,6 +37,7 @@ class msConfigFormGUI extends ilPropertyFormGUI
         parent::__construct();
         global $DIC;
         $this->ctrl = $DIC->ctrl();
+        $this->main_tpl = $DIC->ui()->mainTemplate();
         $this->parent_gui = $parent_gui;
         $this->pl = ilSubscriptionPlugin::getInstance();
         $this->ctrl->saveParameter($parent_gui, 'clip_ext_id');
@@ -159,7 +164,7 @@ class msConfigFormGUI extends ilPropertyFormGUI
         foreach ($this->getItems() as $item) {
             $this->writeValue($item);
         }
-        ilUtil::sendSuccess($this->pl->txt('admin_save_succeed'), true);
+        $this->main_tpl->setOnScreenMessage('success', $this->pl->txt('admin_save_succeed'));
 
         return true;
     }
@@ -183,8 +188,10 @@ class msConfigFormGUI extends ilPropertyFormGUI
         if (get_class($item) != ilFormSectionHeaderGUI::class) {
             $key = $item->getPostVar();
             $array[$key] = msConfig::getValueByKey($key);
-            foreach ($item->getSubItems() as $sub_item) {
-                $array = $this->fillValue($sub_item, $array);
+            if (method_exists($item, 'getSubItems')) {
+                foreach ($item->getSubItems() as $sub_item) {
+                    $array = $this->fillValue($sub_item, $array);
+                }
             }
         }
 
@@ -203,8 +210,10 @@ class msConfigFormGUI extends ilPropertyFormGUI
              */
             $key = $item->getPostVar();
             msConfig::set($key, $this->getInput($key));
-            foreach ($item->getSubItems() as $subitem) {
-                $this->writeValue($subitem);
+            if (method_exists($item, 'getSubItems')) {
+                foreach ($item->getSubItems() as $subitem) {
+                    $this->writeValue($subitem);
+                }
             }
         }
     }

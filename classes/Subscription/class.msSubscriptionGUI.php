@@ -83,7 +83,7 @@ class msSubscriptionGUI
         $this->pl = ilSubscriptionPlugin::getInstance();
         //		$this->pl->updateLanguageFiles();
 
-        $this->obj_ref_id = $_GET['obj_ref_id'];
+        $this->obj_ref_id = isset($_GET['obj_ref_id']) ? $_GET['obj_ref_id'] : 0;
         $this->obj = ilObjectFactory::getInstanceByRefId($this->obj_ref_id);
         $class_name = $this->obj_def->getClassName($this->obj->getType());
         $this->ctrl->setParameterByClass('ilObj' . $class_name . 'GUI', 'ref_id', $this->obj_ref_id);
@@ -96,13 +96,13 @@ class msSubscriptionGUI
     public function executeCommand()
     {
         if (!$this->pl->isActive()) {
-            ilUtil::sendFailure('Active Plugin first', true); // TODO: Translate
+            $this->tpl->setOnScreenMessage('failure', 'Active Plugin first', true); // TODO: Translate
             ilUtil::redirect('index.php');
         }
 
         $this->initHeader();
         $this->ctrl->saveParameter($this, 'obj_ref_id');
-        $this->ctrl->setContext($this->obj->getId(), $this->obj->getType());
+        $this->ctrl->setContextObject($this->obj->getId(), $this->obj->getType());
         $cmd = ($this->ctrl->getCmd()) ? $this->ctrl->getCmd() : $this->getStandardCommand();
         switch ($cmd) {
             default:
@@ -133,7 +133,11 @@ class msSubscriptionGUI
                 // $this->tpl->setAlertProperties($list_gui->getAlertProperties());
             }
         }
-        $this->tpl->setTitleIcon(ilUtil::getTypeIconPath($this->obj->getType(), $this->obj->getId(), 'big'));
+        
+        // Get appropriate icon for object type
+        $icon_name = 'icon_' . $this->obj->getType() . '.svg';
+        $this->tpl->setTitleIcon(ilUtil::getImagePath($icon_name));
+        
         $this->tabs->setBackTarget(
             $this->pl->txt('main_back'), $this->ctrl->getLinkTargetByClass(
             array(
@@ -172,7 +176,7 @@ class msSubscriptionGUI
             case self::CMD_CLEAR:
             case self::CMD_LNG:
                 if (!$this->access->checkAccess('write', '', $this->obj_ref_id)) {
-                    ilUtil::sendFailure($this->pl->txt('main_no_access'));
+                    $this->tpl->setOnScreenMessage('failure', $this->pl->txt('main_no_access'));
                     ilUtil::redirect('index.php');
 
                     return;
@@ -187,7 +191,7 @@ class msSubscriptionGUI
     {
         $this->initForm();
         $txt = $this->getInfoMessage();
-        ilUtil::sendInfo($txt);
+        $this->tpl->setOnScreenMessage('info', $txt);
         $this->tpl->setContent($this->form->getHTML());
     }
 
@@ -199,14 +203,14 @@ class msSubscriptionGUI
         //		$this->form->setDescription($this->pl->txt('main_form_info_usage_' . msConfig::getUsageType()));
         $this->form->setFormAction($this->ctrl->getFormAction($this));
         if (msConfig::getValueByKey('use_email')) {
-            $te = new ilTextareaInputGUI($this->pl->txt('main_field_emails_title'), self::EMAIL_FIELD);
+            $te = new ilTextAreaInputGUI($this->pl->txt('main_field_emails_title'), self::EMAIL_FIELD);
             $te->setInfo($this->pl->txt('main_field_emails_info'));
             $te->setRows(10);
             $te->setCols(100);
             $this->form->addItem($te);
         }
         if (msConfig::getValueByKey('use_matriculation')) {
-            $te = new ilTextareaInputGUI($this->pl->txt('main_field_matriculation_title'), self::MATRICULATION_FIELD);
+            $te = new ilTextAreaInputGUI($this->pl->txt('main_field_matriculation_title'), self::MATRICULATION_FIELD);
             $te->setInfo($this->pl->txt('main_field_matriculation_info'));
             $te->setRows(10);
             $te->setCols(100);
@@ -227,10 +231,10 @@ class msSubscriptionGUI
                 $context = msSubscription::CONTEXT_CRS;
                 break;
         }
-        foreach (msSubscription::seperateEmailString($_POST[self::EMAIL_FIELD], true) as $mail) {
+        foreach (msSubscription::seperateEmailString(isset($_POST[self::EMAIL_FIELD]) ? $_POST[self::EMAIL_FIELD] : '') as $mail) {
             msSubscription::insertNewRequests($this->obj_ref_id, $mail, msSubscription::TYPE_EMAIL, $context);
         }
-        foreach (msSubscription::seperateMatriculationString($_POST[self::MATRICULATION_FIELD]) as $matriculation) {
+        foreach (msSubscription::seperateMatriculationString(isset($_POST[self::MATRICULATION_FIELD]) ? $_POST[self::MATRICULATION_FIELD] : '') as $matriculation) {
             msSubscription::insertNewRequests($this->obj_ref_id, $matriculation, msSubscription::TYPE_MATRICULATION, $context);
         }
         $this->ctrl->redirect($this, self::CMD_LIST_OBJECTS);
@@ -287,9 +291,9 @@ class msSubscriptionGUI
             }
         }
         if (msConfig::getValueByKey(msConfig::F_ENABLE_SENDING_INVITATIONS)) {
-            ilUtil::sendInfo($this->pl->txt('main_msg_emails_sent_usage_' . msConfig::getUsageType()), true);
+            $this->tpl->setOnScreenMessage('info', $this->pl->txt('main_msg_emails_sent_usage_' . msConfig::getUsageType()), true);
         } else {
-            ilUtil::sendInfo($this->pl->txt('main_msg_triage_finished'), true);
+            $this->tpl->setOnScreenMessage('info', $this->pl->txt('main_msg_triage_finished'), true);
         }
         $this->listObjects();
         $this->ctrl->redirect($this, self::CMD_LIST_OBJECTS);
@@ -339,7 +343,7 @@ class msSubscriptionGUI
     protected function removeUnregistered()
     {
         $where = array(
-            'obj_ref_id' => $_GET['obj_ref_id'],
+            'obj_ref_id' => isset($_GET['obj_ref_id']) ? $_GET['obj_ref_id'] : 0,
             'deleted'    => false,
         );
         /**
@@ -352,7 +356,7 @@ class msSubscriptionGUI
             }
         }
 
-        ilUtil::sendInfo($this->pl->txt("remove_unregistered_info"), true);
+        $this->tpl->setOnScreenMessage('info', $this->pl->txt("remove_unregistered_info"), true);
 
         if (msSubscription::where($where)->count() > 0) {
             $this->ctrl->redirect($this, self::CMD_LIST_OBJECTS);
@@ -365,7 +369,7 @@ class msSubscriptionGUI
     protected function clear()
     {
         $where = array(
-            'obj_ref_id' => $_GET['obj_ref_id'],
+            'obj_ref_id' => isset($_GET['obj_ref_id']) ? $_GET['obj_ref_id'] : 0,
             'deleted'    => false,
         );
 
@@ -377,7 +381,7 @@ class msSubscriptionGUI
             $msSubscription->update();
         }
 
-        ilUtil::sendInfo($this->pl->txt("clear_info"), true);
+        $this->tpl->setOnScreenMessage('info', $this->pl->txt("clear_info"), true);
 
         $this->ctrl->redirect($this, self::CMD_SHOW_FORM);
     }

@@ -39,7 +39,7 @@ class msSubscriptionTableGUI extends msModelObjectTableGUI
     protected function initTableData()
     {
         $where = array(
-            'obj_ref_id' => $_GET['obj_ref_id'],
+            'obj_ref_id' => isset($_GET['obj_ref_id']) ? $_GET['obj_ref_id'] : 0,
             'deleted'    => false,
         );
         $data = array();
@@ -49,8 +49,13 @@ class msSubscriptionTableGUI extends msModelObjectTableGUI
             /**
              * @var msSubscription $dat
              */
+            // Ensure user_status_object is initialized
+            if (!$dat->user_status_object) {
+                $dat->afterObjectLoad();
+            }
+            
             // SW: Remove duplicated users, see bug https://jira.studer-raimann.ch/browse/PLMSC-11
-            $user_id = $dat->user_status_object->getUsrId();
+            $user_id = $dat->user_status_object ? $dat->user_status_object->getUsrId() : null;
             if (in_array($user_id, $user_ids)) {
                 continue;
             }
@@ -58,6 +63,7 @@ class msSubscriptionTableGUI extends msModelObjectTableGUI
                 $user_ids[] = $user_id;
             }
             $row = $dat->__asArray();
+            $row['id'] = $dat->getId(); // Ensure ID is available
             $row['name'] = $dat->lookupName();
             $row['status_sort'] = $this->pl->txt('main_user_status_' . $dat->getUserStatus());
             $row['in_ilias'] = $user_id ? 1 : 0;
@@ -72,7 +78,7 @@ class msSubscriptionTableGUI extends msModelObjectTableGUI
     {
         $this->addColumn($this->pl->txt('main_tblh_subscribe'));
 
-        if ($this->getMailUsage() AND msConfig::getValueByKey(msConfig::F_ENABLE_SENDING_INVITATIONS)) {
+        if ($this->getMailUsage() && msConfig::getValueByKey(msConfig::F_ENABLE_SENDING_INVITATIONS)) {
             $this->addColumn($this->pl->txt('main_tblh_invite'));
         }
         if ($this->getMailUsage()) {
@@ -106,7 +112,7 @@ class msSubscriptionTableGUI extends msModelObjectTableGUI
     {
         $this->addCommandButton(msSubscriptionGUI::CMD_REMOVE_UNREGISTERED, $this->pl->txt('main_send_table_remove_unregistered'));
         $this->addCommandButton(msSubscriptionGUI::CMD_CLEAR, $this->pl->txt('main_send_table_clear'));
-        if (msConfig::getValueByKey(msConfig::F_USE_EMAIL_FOR_USERS) AND msConfig::getValueByKey(msConfig::F_ENABLE_SENDING_INVITATIONS)) {
+        if (msConfig::getValueByKey(msConfig::F_USE_EMAIL_FOR_USERS) && msConfig::getValueByKey(msConfig::F_ENABLE_SENDING_INVITATIONS)) {
             $this->addCommandButton(msSubscriptionGUI::CMD_TRIAGE, $this->pl->txt('main_send_table_usage_2'));
         } else {
             $this->addCommandButton(msSubscriptionGUI::CMD_TRIAGE, $this->pl->txt('main_send_table_usage_1'));
@@ -124,7 +130,8 @@ class msSubscriptionTableGUI extends msModelObjectTableGUI
     protected function initLanguage()
     {
         $this->pl = ilSubscriptionPlugin::getInstance();
-        $this->lng = $this->pl;
+        // Return false to let parent class set proper language service
+        return false;
     }
 
 
@@ -133,10 +140,25 @@ class msSubscriptionTableGUI extends msModelObjectTableGUI
         /**
          * @var msSubscription $msSubscription
          */
-        $msSubscription = msSubscription::find($a_set['id']);
-        $this->fillStandardFields($msSubscription);
-        $this->fillActions($msSubscription);
-        $this->tpl->setVariable('OPTIONS', $this->getRoleSelector($msSubscription->getRole()));
+        $id = $a_set['id'] ?? null;
+        if (!$id) {
+            $msSubscription = null;
+            if (isset($a_set['matching_string']) && isset($a_set['obj_ref_id'])) {
+                $where = [
+                    'matching_string' => $a_set['matching_string'],
+                    'obj_ref_id' => $a_set['obj_ref_id']
+                ];
+                $msSubscription = msSubscription::where($where)->first();
+            }
+        } else {
+            $msSubscription = msSubscription::find($id);
+        }
+        
+        if ($msSubscription) {
+            $this->fillStandardFields($msSubscription);
+            $this->fillActions($msSubscription);
+            $this->tpl->setVariable('OPTIONS', $this->getRoleSelector($msSubscription->getRole()));
+        }
     }
 
 
@@ -151,15 +173,15 @@ class msSubscriptionTableGUI extends msModelObjectTableGUI
         switch ($type) {
             case 'crs':
                 $roles = array(
-                    IL_CRS_MEMBER => $this->pl->txt('main_role_' . IL_CRS_MEMBER),
-                    IL_CRS_TUTOR  => $this->pl->txt('main_role_' . IL_CRS_TUTOR),
-                    IL_CRS_ADMIN  => $this->pl->txt('main_role_' . IL_CRS_ADMIN),
+                    ilParticipants::IL_CRS_MEMBER => $this->pl->txt('main_role_' . ilParticipants::IL_CRS_MEMBER),
+                    ilParticipants::IL_CRS_TUTOR  => $this->pl->txt('main_role_' . ilParticipants::IL_CRS_TUTOR),
+                    ilParticipants::IL_CRS_ADMIN  => $this->pl->txt('main_role_' . ilParticipants::IL_CRS_ADMIN),
                 );
                 break;
             case 'grp':
                 $roles = array(
-                    IL_GRP_MEMBER => $this->pl->txt('main_role_' . IL_GRP_MEMBER),
-                    IL_GRP_ADMIN  => $this->pl->txt('main_role_' . IL_GRP_ADMIN),
+                    ilParticipants::IL_GRP_MEMBER => $this->pl->txt('main_role_' . ilParticipants::IL_GRP_MEMBER),
+                    ilParticipants::IL_GRP_ADMIN  => $this->pl->txt('main_role_' . ilParticipants::IL_GRP_ADMIN),
                 );
                 break;
         }
@@ -208,7 +230,7 @@ class msSubscriptionTableGUI extends msModelObjectTableGUI
         }
         $this->tpl->setVariable('USR_ID', 'obj_' . $msSubscription->getId());
         $this->tpl->setVariable('STD_ROLE', msUserStatus::ROLE_MEMBER);
-        if (!$this->getMailUsage() OR !msConfig::getValueByKey(msConfig::F_ENABLE_SENDING_INVITATIONS)) {
+        if (!$this->getMailUsage() || !msConfig::getValueByKey(msConfig::F_ENABLE_SENDING_INVITATIONS)) {
             $this->tpl->setVariable('DISABLE_NOMAIL', 'nomail');
         }
         $this->tpl->setVariable('CMD_INVITE', msSubscriptionGUI::CMD_INVITE);
