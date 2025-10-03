@@ -104,7 +104,11 @@ class msSubscription extends ActiveRecord
      */
     public function lookupName()
     {
-        if ($this->user_status_object->getUsrId()) {
+        if (!$this->user_status_object) {
+            $this->afterObjectLoad();
+        }
+        
+        if ($this->user_status_object && $this->user_status_object->getUsrId()) {
             $lookupName = ilObjUser::_lookupName($this->user_status_object->getUsrId());
 
             return $lookupName['lastname'] . ', ' . $lookupName['firstname'];
@@ -119,8 +123,18 @@ class msSubscription extends ActiveRecord
         /**
          * @var ilCourseParticipants $participants
          */
+        // Ensure user_status_object is initialized
+        if (!$this->user_status_object) {
+            $this->afterObjectLoad();
+        }
+        
         $obj_id = ilObject::_lookupObjId($this->getObjRefId());
-        $usr_id = $this->user_status_object->getUsrId();
+        $usr_id = $this->user_status_object ? $this->user_status_object->getUsrId() : null;
+        
+        if (!$usr_id) {
+            return false; // Cannot assign without a valid user ID
+        }
+        
         $status = false;
         switch ($this->getContext()) {
             case self::CONTEXT_CRS:
@@ -230,9 +244,9 @@ class msSubscription extends ActiveRecord
      */
     public static function generateToken()
     {
-        $token = sha1(microtime() * rand(1, 10000));
+        $token = sha1(microtime(true) * rand(1, 10000));
         while (self::where(array('token' => $token))->hasSets()) {
-            $token = sha1(microtime() * rand(1, 10000));
+            $token = sha1(microtime(true) * rand(1, 10000));
         }
 
         return $token;
@@ -446,7 +460,12 @@ class msSubscription extends ActiveRecord
      */
     public function getUserStatus()
     {
-        return $this->user_status_object->getStatus();
+        // Ensure user_status_object is initialized
+        if (!$this->user_status_object) {
+            $this->afterObjectLoad();
+        }
+        
+        return $this->user_status_object ? $this->user_status_object->getStatus() : 0;
     }
 
 
