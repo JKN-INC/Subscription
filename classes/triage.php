@@ -65,8 +65,10 @@ class msTriage
 
     public function initILIAS()
     {
-        chdir(substr($_SERVER['SCRIPT_FILENAME'], 0, strpos($_SERVER['SCRIPT_FILENAME'], '/Customizing')));
-
+        $base_dir = substr($_SERVER['SCRIPT_FILENAME'], 0, strpos($_SERVER['SCRIPT_FILENAME'], '/Customizing'));
+        if (is_dir($base_dir)) {
+            chdir($base_dir);
+        }
         if (!$this->ctrl instanceof ilCtrl) {
             //			echo "!!!";
             //			exit;
